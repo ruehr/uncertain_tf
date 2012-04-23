@@ -1,0 +1,17 @@
+<package>
+  <description brief="tf_uncertainty">
+
+     tf_uncertainty
+
+  </description>
+  <author>Thomas Ruehr</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/tf_uncertainty</url>
+  <depend package="tf"/>
+  <depend package="roscpp"/>
+  <depend package="geometry_msgs"/>
+  <depend package="eigen"/>
+</package>
+
+
