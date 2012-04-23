@@ -28,5 +28,5 @@ rosbuild_add_library(${PROJECT_NAME} src/CovarianceTimeCache.cpp src/UncertainTr
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 rosbuild_add_executable(tf_uncertainty src/tf_uncertainty.cpp)
 target_link_libraries(tf_uncertainty ${PROJECT_NAME})
-rosbuild_add_executable(eigen_playground src/eigen_playground.cpp)
+#rosbuild_add_executable(eigen_playground src/eigen_playground.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
