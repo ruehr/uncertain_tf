@@ -54,7 +54,7 @@ bool CovarianceTimeCache::getData(ros::Time time, CovarianceStorage & data_out, 
 
 bool CovarianceTimeCache::insertData(const CovarianceStorage& new_data)
 {
-    std::cout << "insertData new_data.stamp_ " << new_data.stamp_ << endl;
+    //std::cout << "insertData new_data.stamp_ " << new_data.stamp_ << endl;
 
     L_CovarianceStorage::iterator storage_it = storage_.begin();
 
@@ -68,7 +68,7 @@ bool CovarianceTimeCache::insertData(const CovarianceStorage& new_data)
     }
     else
     {
-        std::cout << "storage empty" << endl;
+        //std::cout << "storage empty" << endl;
     }
 
     while(storage_it != storage_.end())
@@ -79,7 +79,7 @@ bool CovarianceTimeCache::insertData(const CovarianceStorage& new_data)
     }
     storage_.insert(storage_it, new_data);
 
-    std::cout << "storage size " << storage_.size() << endl;
+    //std::cout << "storage size " << storage_.size() << endl;
 
     pruneList();
     return true;

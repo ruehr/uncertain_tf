@@ -65,4 +65,48 @@ public:
 
 };
 
+
+
+/**
+    Get a a sample from a univariant gaussian distribution
+*/
+template<typename _Scalar>
+class UnivariateNormal
+{
+    boost::mt19937 rng;    // The uniform pseudo-random algorithm
+    boost::normal_distribution<_Scalar> norm;  // The gaussian combinator
+    boost::variate_generator<boost::mt19937&,boost::normal_distribution<_Scalar> >
+       randN; // The 0-mean unit-variance normal generator
+
+    _Scalar mean_;
+    _Scalar stdev_;
+
+public:
+
+    UnivariateNormal(const _Scalar & mean, const _Scalar &var)
+        : randN(rng,norm)
+    {
+        setVar(var);
+        setMean(mean);
+    }
+
+    void setVar(const _Scalar & var)
+    {
+        stdev_ = sqrt(fabs(var));
+    }
+
+    void setMean(const _Scalar & mean)
+    {
+        mean_ = mean;
+    }
+
+    void nextSample(_Scalar &sample)
+    {
+        sample = randN() * stdev_ + mean_;
+    }
+
+};
+
+
+
 #endif

@@ -3,10 +3,11 @@
 #define _UNCERTAIN_TRANSFORM_BROADCASTER_H_
 
 #include "uncertain_tf/UncertainTransformer.h"
+#include "tf/transform_broadcaster.h"
 
 namespace uncertain_tf{
 
-class UncertainTransformBroadcaster
+class UncertainTransformBroadcaster : public tf::TransformBroadcaster
 {
 public:
     UncertainTransformBroadcaster();

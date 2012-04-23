@@ -20,7 +20,15 @@ public:
 
     //! sample from frame names and time into a vector of transforms
     void sampleTransform(const std::string& target_frame, const std::string& source_frame,
-                         const ros::Time& time, std::vector<StampedTransform>& transform, size_t n);
+                         const ros::Time& time, std::vector<StampedTransform>& output, size_t n);
+
+    //! same as above, but now sample from a distribution for the time
+    void sampleTransformGaussianTime(const std::string& target_frame, const std::string& source_frame,
+                         const ros::Time& time_mean, const ros::Duration& time_variance, std::vector<StampedTransform>& output, size_t n);
+
+    //! same as above, but instead of gaussian time creates samples in equal time steps
+    void sampleTransformUniformTime(const std::string& target_frame, const std::string& source_frame,
+                         const ros::Time& time_start, const ros::Time& time_end, std::vector<StampedTransform>& output, size_t n);
 
     void printFrame(std::string last_frame, std::string current_frame, tf::Transform rel);
 
@@ -59,6 +67,7 @@ private:
     ros::NodeHandle node_;
     ros::Subscriber message_subscriber_utf_;
     EigenMultivariateNormal<double, 6> *emn_;
+    UnivariateNormal<double> *univ_;
 };
 
 template <typename Derived, typename OtherDerived>

@@ -1,4 +1,3 @@
-
 #include "uncertain_tf/UncertainTransformListener.h"
 
 
@@ -7,32 +6,20 @@ using namespace tf;
 using namespace uncertain_tf;
 using namespace std;
 
-namespace uncertain_tf {
-
-
-
-
-/*
-void UncertainTransformListener::calculateSampleCovariance(const MatrixXd& x, const MatrixXd& y, MatrixXd & C_)
+namespace uncertain_tf
 {
-    //typedef typename Derived::Scalar Scalar;
-    //typedef typename internal::plain_row_type<Derived>::type RowVectorType;
-
-    double num_observations = x.rows();
-
-    VectorXd x_mean = x.colwise().sum() / num_observations;
-    VectorXd y_mean = y.colwise().sum() / num_observations;
 
 
-    MatrixXd& C = const_cast< MatrixXd& >(C_);
-
-    C.derived().resize(x.cols(),x.cols()); // resize the derived object
-    C = (x.rowwise() - x_mean).transpose() * (y.rowwise() - y_mean) / num_observations;
-
-    //C.derived().resize(x.cols(),x.cols()); // resize the derived object
-    //C = (x.rowwise() - x_mean).transpose() * (y.rowwise() - y_mean) / num_observations;
+UncertainTransformListener::UncertainTransformListener(ros::Duration max_cache_time, bool spin_thread)
+{
+    message_subscriber_utf_ = node_.subscribe<uncertain_tf::utfMessage>("/tf_uncertainty", 100, boost::bind(&UncertainTransformListener::subscription_callback, this, _1));
+    ROS_INFO("SUBSCRIBER SET UP");
+    VectorXd m(6);
+    MatrixXd c(6,6);
+    emn_ = new EigenMultivariateNormal<double, 6>(m,c);
+    univ_ = new UnivariateNormal<double>(1,0);
 }
-*/
+
 
 VectorXd UncertainTransformListener::calculateSampleMean(const MatrixXd &x)
 {
@@ -117,16 +104,6 @@ tf::Transform UncertainTransformListener::transformVectorXdToTF(const VectorXd &
 
 }
 
-
-UncertainTransformListener::UncertainTransformListener(ros::Duration max_cache_time, bool spin_thread)
-{
-    message_subscriber_utf_ = node_.subscribe<uncertain_tf::utfMessage>("/tf_uncertainty", 100, boost::bind(&UncertainTransformListener::subscription_callback, this, _1));
-    ROS_INFO("SUBSCRIBER SET UP");
-    VectorXd m(6);
-    MatrixXd c(6,6);
-    emn_ = new EigenMultivariateNormal<double, 6>(m,c);
-}
-
 void UncertainTransformListener::subscription_callback(const uncertain_tf::utfMessageConstPtr& msg)
 {
     //std::cout << "got a message :" << endl;
@@ -149,7 +126,7 @@ void UncertainTransformListener::printFrame(std::string last_frame, std::string 
 void UncertainTransformListener::sampleTransform(const std::string& target_frame, const std::string& source_frame,
         const ros::Time& time, std::vector<StampedTransform>& output, size_t n)
 {
-    ROS_INFO("START SAMPLING");
+    //ROS_INFO("START SAMPLING");
 
     ros::Time start = ros::Time::now();
 
@@ -256,12 +233,12 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
         std::vector<tf::Transform> samples;
         chain_sampled_transforms.push_back(samples);
 
+
         if (isZero(cs.covariance_))
             chain_sampled_transforms.back().push_back(zeroMean);
         else
             sampleFromMeanCov(zeroMean,cs.covariance_,chain_sampled_transforms.back(),n);
 
-        //sampleFromMeanCov(zeroMean,cs.covariance_,chain_sampled_transforms.back(),n);
         for (std::vector<tf::Transform>::iterator jt=chain_sampled_transforms.back().begin(); jt!= chain_sampled_transforms.back().end(); ++jt)
             *jt = (rel * (*jt)).inverse(); // when walking down, we invert the transforms
 
@@ -286,7 +263,50 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
         output.push_back(mean);
     }
 
-    ROS_INFO("DONE SAMPLING %f", (ros::Time::now() - start).toSec());
+    //ROS_INFO("DONE SAMPLING %f", (ros::Time::now() - start).toSec());
+
+}
+
+void UncertainTransformListener::sampleTransformGaussianTime(const std::string& target_frame, const std::string& source_frame,
+        const ros::Time& time_mean, const ros::Duration& time_variance, std::vector<StampedTransform>& output, size_t n)
+{
+    //UnivariateNormal<double> univ(time_mean.toSec(),time_variance.toSec());
+    univ_->setMean(time_mean.toSec());
+    univ_->setVar(time_variance.toSec());
+    for (size_t k = 0; k < n; k++)
+    {
+        double act_time;
+        univ_->nextSample(act_time);
+        try
+        {
+            UncertainTransformListener::sampleTransform(target_frame, source_frame, ros::Time(act_time), output, 1);
+        }
+        catch (tf::TransformException ex)
+        {
+            //ROS_ERROR("s f %s",ex.what());
+        }
+
+    }
+}
+
+
+void UncertainTransformListener::sampleTransformUniformTime(const std::string& target_frame, const std::string& source_frame,
+        const ros::Time& time_start, const ros::Time& time_end, std::vector<StampedTransform>& output, size_t n)
+{
+    double time_step = (time_end - time_start).toSec() / n;
+    double act_time = time_start.toSec();
+    for (size_t k = 0; k < n; k++)
+    {
+        try
+        {
+            UncertainTransformListener::sampleTransform(target_frame, source_frame, ros::Time(act_time), output, 1);
+        }
+        catch (tf::TransformException ex)
+        {
+            //
+        }
+        act_time += time_step;
+    }
 
 }
 
