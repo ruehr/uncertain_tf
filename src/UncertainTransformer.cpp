@@ -23,7 +23,7 @@ CovarianceTimeCache* UncertainTransformer::getCovariance(unsigned int frame_id)
         // insert 0 covariance at time 0 to have covariances defined for all frames we query
         if (covariances_[frame_id] == NULL)
         {
-            std::cout << "creating new CovarianceTimeCache for id " << frame_id << endl;
+            //std::cout << "creating new CovarianceTimeCache for id " << frame_id << endl;
             covariances_[frame_id] = new CovarianceTimeCache(ros::Duration(10)); //!TODO : set actual max storage time
             MatrixXd cov(6,6);
             cov.setZero();
@@ -36,7 +36,7 @@ CovarianceTimeCache* UncertainTransformer::getCovariance(unsigned int frame_id)
 bool UncertainTransformer::setCovariance(const StampedCovariance &cov)
 {
     std::string frame_id = tf::resolve(getTFPrefix(), cov.frame_id_);
-    std::cout << "setCovariance " << frame_id << endl;
+    //std::cout << "setCovariance " << frame_id << endl;
     // todo: set the parent id, we could run into cases where the parent changes and we still have the covariance for another parent
 
     StampedCovariance mapped_covariance((MatrixXd)cov, cov.stamp_, cov.frame_id_);

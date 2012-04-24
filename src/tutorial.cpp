@@ -137,7 +137,7 @@ int main(int argc, char** argv)
             std::vector<StampedTransform> transform_samples;
             std::cout << endl << "***********************************************************************************" << endl << endl;
 
-            ulistener.sampleTransform("map", "object_on_table", ros::Time(0), transform_samples, 50);
+            ulistener.sampleTransform("map", "object", ros::Time(0), transform_samples, 500);
 
             geometry_msgs::PoseArray parr;
             parr.header.frame_id = transform_samples[0].frame_id_;
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
         {
             std::vector<StampedTransform> transform_samples;
 
-            ulistener.sampleTransform("map", "object_on_table", ros::Time(0), transform_samples, 50);
+            ulistener.sampleTransform("map", "object", ros::Time(0), transform_samples, 50);
 
             MatrixXd sample_covar;
             MatrixXd samples = ulistener.sampleSetTFtoMatrixXd(transform_samples);
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
         if (1)
         {
             std::vector<StampedTransform> transform_samples;
-            ulistener.sampleTransformGaussianTime("map", "object_on_table", ros::Time::now() - ros::Duration(4),ros::Duration(2), transform_samples, 50);
+            ulistener.sampleTransformGaussianTime("map", "object", ros::Time::now() - ros::Duration(4),ros::Duration(2), transform_samples, 50);
 
             // note: the sampler catches all exeptions but does not generate a sample when catching one,
             // so the number of samples we get depends on how many fall inside a time period where the respective tfs are defined

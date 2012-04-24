@@ -131,7 +131,15 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
     ros::Time start = ros::Time::now();
 
     StampedTransform mean;
-    ((const tf::TransformListener*)this)->lookupTransform(target_frame, source_frame, time, mean);
+    try
+    {
+        ((const tf::TransformListener*)this)->lookupTransform(target_frame, source_frame, time, mean);
+    }
+    catch (tf::TransformException ex)
+    {
+        ROS_ERROR("UncertainTransformListener::sampleTransform caught exception: %s",ex.what());
+        return;
+    }
 
     std::list<std::string> source_parents;
     std::set<std::string> source_parents_set;
