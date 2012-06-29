@@ -46,7 +46,9 @@ bool CovarianceTimeCache::getData(ros::Time time, CovarianceStorage & data_out, 
     }
     else
     {
+#ifdef ROS_BREAK      
         ROS_BREAK();
+#endif
     }
 
     return true;
