@@ -21,8 +21,8 @@ CovarianceTimeCache::CovarianceTimeCache(ros::Duration max_storage_time)
 
 bool CovarianceTimeCache::getData(ros::Time time, CovarianceStorage & data_out, std::string* error_str)
 {
-    CovarianceStorage* p_temp_1 = NULL;
-    CovarianceStorage* p_temp_2 = NULL;
+    const CovarianceStorage* p_temp_1 = NULL;
+    const CovarianceStorage* p_temp_2 = NULL;
 
     int num_nodes = findClosest(p_temp_1, p_temp_2, time, error_str);
     if (num_nodes == 0)
@@ -46,7 +46,7 @@ bool CovarianceTimeCache::getData(ros::Time time, CovarianceStorage & data_out, 
     }
     else
     {
-#ifdef ROS_BREAK      
+#ifdef ROS_BREAK
         ROS_BREAK();
 #endif
     }
@@ -57,29 +57,13 @@ bool CovarianceTimeCache::getData(ros::Time time, CovarianceStorage & data_out, 
 bool CovarianceTimeCache::insertData(const CovarianceStorage& new_data)
 {
     //std::cout << "insertData new_data.stamp_ " << new_data.stamp_ << endl;
-
-    L_CovarianceStorage::iterator storage_it = storage_.begin();
-
-    if(storage_it != storage_.end())
+    if(storage_.begin() != storage_.end())
     {
-        if (storage_it->stamp_ > new_data.stamp_ + max_storage_time_)
-        {
-            std::cout << storage_it->stamp_ << " should not be bigger than " <<  new_data.stamp_  << " + " <<  max_storage_time_ << endl;
+        if (storage_.rbegin()->stamp_ > new_data.stamp_ + max_storage_time_)
             return false;
-        }
-    }
-    else
-    {
-        //std::cout << "storage empty" << endl;
     }
 
-    while(storage_it != storage_.end())
-    {
-        if (storage_it->stamp_ <= new_data.stamp_)
-            break;
-        storage_it++;
-    }
-    storage_.insert(storage_it, new_data);
+    storage_.insert(storage_.end(), new_data);
 
     //std::cout << "storage size " << storage_.size() << endl;
 
@@ -88,7 +72,7 @@ bool CovarianceTimeCache::insertData(const CovarianceStorage& new_data)
 }
 
 
-uint8_t CovarianceTimeCache::findClosest(CovarianceStorage*& one, CovarianceStorage*& two, ros::Time target_time, std::string* error_str)
+uint8_t CovarianceTimeCache::findClosest(const CovarianceStorage*& one, const CovarianceStorage*& two, ros::Time target_time, std::string* error_str)
 {
     //No values stored
     if (storage_.empty())
@@ -100,14 +84,15 @@ uint8_t CovarianceTimeCache::findClosest(CovarianceStorage*& one, CovarianceStor
     //If time == 0 return the latest
     if (target_time.isZero())
     {
-        one = &storage_.front();
+        one = &(*storage_.rbegin());
         return 1;
     }
 
     // One value stored
     if (++storage_.begin() == storage_.end())
     {
-        CovarianceStorage& ts = *storage_.begin();
+        //CovarianceStorage& ts = *storage_.begin();
+        const CovarianceStorage& ts = *storage_.begin();
         if (ts.stamp_ == target_time)
         {
             one = &ts;
@@ -120,17 +105,17 @@ uint8_t CovarianceTimeCache::findClosest(CovarianceStorage*& one, CovarianceStor
         }
     }
 
-    ros::Time latest_time = (*storage_.begin()).stamp_;
-    ros::Time earliest_time = (*(storage_.rbegin())).stamp_;
+    ros::Time latest_time = (*storage_.rbegin()).stamp_;
+    ros::Time earliest_time = (*(storage_.begin())).stamp_;
 
     if (target_time == latest_time)
     {
-        one = &(*storage_.begin());
+        one = &(*storage_.rbegin());
         return 1;
     }
     else if (target_time == earliest_time)
     {
-        one = &(*storage_.rbegin());
+        one = &(*storage_.begin());
         return 1;
     }
     // Catch cases that would require extrapolation
@@ -149,7 +134,7 @@ uint8_t CovarianceTimeCache::findClosest(CovarianceStorage*& one, CovarianceStor
 
     //At least 2 values stored
     //Find the first value less than the target value
-    L_CovarianceStorage::iterator storage_it = storage_.begin();
+    /*L_CovarianceStorage::iterator storage_it = storage_.begin();
     while(storage_it != storage_.end())
     {
         if (storage_it->stamp_ <= target_time)
@@ -159,7 +144,19 @@ uint8_t CovarianceTimeCache::findClosest(CovarianceStorage*& one, CovarianceStor
 
     //Finally the case were somewhere in the middle  Guarenteed no extrapolation :-)
     one = &*(storage_it); //Older
-    two = &*(--storage_it); //Newer
+    two = &*(--storage_it); //Newer*/
+
+    //Create a temporary object to compare to when searching the lower bound via std::set
+   CovarianceStorage tmp;
+   tmp.stamp_ = target_time;
+
+   //Find the first value equal or higher than the target value
+   L_CovarianceStorage::iterator storage_it = storage_.upper_bound(tmp);
+
+   //Finally the case were somewhere in the middle  Guarenteed no extrapolation :-)
+   two = &*(storage_it); //Newer
+   one = &*(--storage_it); //Older
+
     return 2;
 
 }
@@ -173,8 +170,8 @@ void CovarianceTimeCache::pruneList()
 {
     ros::Time latest_time = storage_.begin()->stamp_;
 
-    while(!storage_.empty() && storage_.back().stamp_ + max_storage_time_ < latest_time)
+    while(!storage_.empty() && storage_.begin()->stamp_ + max_storage_time_ < latest_time)
     {
-        storage_.pop_back();
+        storage_.erase(storage_.begin());
     }
 }

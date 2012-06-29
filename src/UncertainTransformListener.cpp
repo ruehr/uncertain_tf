@@ -158,7 +158,7 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
 
     parent = tf::resolve(((const tf::TransformListener*)this)->getTFPrefix(), target_frame);
     have_parent = true;
-    bool connected = false;
+    //bool connected = false;
     while (have_parent)
     {
         //std::cout << "target_chain: \'" << parent << "\'" << endl;
@@ -167,7 +167,7 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
         if (source_parents_set.find(parent) != source_parents_set.end())
         {
             have_parent = false;
-            connected = true;
+            //connected = true;
         }
         else
             have_parent = ((const tf::TransformListener*)this)->getParent(parent,time,parent);

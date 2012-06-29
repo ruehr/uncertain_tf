@@ -3,6 +3,7 @@
 
 #include "tf/tf.h"
 #include <Eigen/Dense>
+#include <set>
 
 using Eigen::MatrixXd;
 
@@ -32,6 +33,12 @@ public :
         return *this;
     }
 
+    bool operator< (const CovarianceStorage &b) const
+    {
+      return this->stamp_ < b.stamp_;
+    }
+
+
     MatrixXd covariance_;
     ros::Time stamp_;
 
@@ -52,16 +59,17 @@ public:
 
     bool insertData(const CovarianceStorage& new_data);
 
-    inline uint8_t findClosest(CovarianceStorage*& one, CovarianceStorage*& two, ros::Time target_time, std::string* error_str);
+    inline uint8_t findClosest(const CovarianceStorage*& one,const CovarianceStorage*& two, ros::Time target_time, std::string* error_str);
 
     inline void interpolate(const CovarianceStorage& one, const CovarianceStorage& two, ros::Time time, CovarianceStorage& output);
 
     void pruneList();
 
-    typedef std::list<CovarianceStorage> L_CovarianceStorage;
+    typedef std::set<CovarianceStorage> L_CovarianceStorage;
     L_CovarianceStorage storage_;
 
     ros::Duration max_storage_time_;
+
 
 };
 
