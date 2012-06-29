@@ -11,6 +11,12 @@
   <depend package="tf"/>
   <depend package="roscpp"/>
   <depend package="geometry_msgs"/>
+  <export>
+    <cpp cflags="`pkg-config --cflags eigen3` -I${prefix}/include `rosboost-cfg --cflags`" 
+         lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -luncertain_tf"/>
+  </export>
+
+
   <!--depend package="eigen"/-->
 </package>
 
