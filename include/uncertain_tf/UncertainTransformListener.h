@@ -11,6 +11,9 @@ using namespace Eigen;
 
 namespace uncertain_tf {
 
+
+//TODO: Most of this functionality should move to UncertainTransformer!
+
 class UncertainTransformListener : public UncertainTransformer
 {
 
@@ -18,9 +21,15 @@ public:
 
     UncertainTransformListener(ros::Duration max_cache_time = ros::Duration(tf::Transformer::DEFAULT_CACHE_TIME), bool spin_thread = true);
 
-    //! sample from frame names and time into a vector of transforms
+    //! sample from frame names and time into a vector of transforms, results are push_back'ed to output
     void sampleTransform(const std::string& target_frame, const std::string& source_frame,
                          const ros::Time& time, std::vector<StampedTransform>& output, size_t n);
+
+    //! sample using time travel, results are push_back'ed to output
+    void sampleTransform(const std::string& target_frame, const ros::Time& target_time,
+                          const std::string& source_frame, const ros::Time& time,
+                          const std::string& fixed_frame,
+                          std::vector<StampedTransform>& output, size_t n);
 
     //! same as above, but now sample from a distribution for the time
     void sampleTransformGaussianTime(const std::string& target_frame, const std::string& source_frame,

@@ -275,6 +275,38 @@ void UncertainTransformListener::sampleTransform(const std::string& target_frame
 
 }
 
+
+void UncertainTransformListener::sampleTransform(const std::string& target_frame, const ros::Time& target_time,
+                          const std::string& source_frame, const ros::Time& source_time,
+                          const std::string& fixed_frame,
+                          std::vector<StampedTransform>& output, size_t n)
+{
+    std::vector<StampedTransform> fixed_to_source;
+    std::vector<StampedTransform> target_to_fixed;
+
+    //std::cout << "looking for frame " << fixed_frame << " to " << source_frame << " at time " << source_time.toSec() << std::endl;
+    sampleTransform(fixed_frame, source_frame, source_time, fixed_to_source, n);
+
+    //std::cout << "looking for frame " << target_frame << " to " << fixed_frame << " at time " << target_time.toSec() << std::endl;
+    sampleTransform(target_frame, fixed_frame, target_time, target_to_fixed, n);
+
+    //std::cout << "sizes " << fixed_to_source.size() << " " << target_to_fixed.size() << std::endl;
+
+    // we might have lost some transforms due to exeptions, such as when no data is know, so make sure we don't make up anything we don't know
+    for (size_t k = 0 ; k < std::min(fixed_to_source.size(),target_to_fixed.size()); ++k)
+    {
+        tf::StampedTransform transform;
+        transform.setData(target_to_fixed[k] * fixed_to_source[k]);
+        transform.stamp_ = target_to_fixed[k].stamp_;
+        transform.frame_id_ = target_frame;
+        transform.child_frame_id_ = source_frame;
+        // add transform to output
+        output.push_back(transform);
+    }
+
+}
+
+
 void UncertainTransformListener::sampleTransformGaussianTime(const std::string& target_frame, const std::string& source_frame,
         const ros::Time& time_mean, const ros::Duration& time_variance, std::vector<StampedTransform>& output, size_t n)
 {
